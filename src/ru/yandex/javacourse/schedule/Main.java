@@ -1,14 +1,12 @@
 package ru.yandex.javacourse.schedule;
 
-import static ru.yandex.javacourse.schedule.tasks.TaskStatus.DONE;
-import static ru.yandex.javacourse.schedule.tasks.TaskStatus.IN_PROGRESS;
-import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
-
 import ru.yandex.javacourse.schedule.manager.Managers;
 import ru.yandex.javacourse.schedule.manager.TaskManager;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
+
+import static ru.yandex.javacourse.schedule.tasks.TaskStatus.*;
 
 public class Main {
 	public static void main(String[] args) {
@@ -84,6 +82,31 @@ public class Main {
 		manager.deleteTask(taskId1);
 		System.out.println("DELETE: Epic1");
 		manager.deleteEpic(epicId1);
+		printAllTasks(manager);
+
+		Epic epic3 = new Epic("Epic #3", "Epic3 description");
+		int epic3Id = manager.addNewEpic(epic3);
+		Subtask e3Subtask1 = new Subtask("Subtask #1-3", "Subtask1 description", NEW, epic3Id);
+		Subtask e3Subtask2 = new Subtask("Subtask #2-3", "Subtask2 description", NEW, epic3Id);
+		Subtask e3Subtask3 = new Subtask("Subtask #3-3", "Subtask3 description", DONE, epic3Id);
+		manager.addNewSubtask(e3Subtask1);
+		manager.addNewSubtask(e3Subtask2);
+		manager.addNewSubtask(e3Subtask3);
+		Epic epic4 = new Epic("Epic #4", "Epic4 description");
+		int epic4Id = manager.addNewEpic(epic4);
+		manager.getSubtask(e3Subtask1.getId());
+		manager.getEpic(epic3Id);
+		manager.getEpic(epic3Id);
+		manager.getEpic(epic4Id);
+		System.out.println(manager.getHistory());
+		manager.getSubtask(e3Subtask3.getId());
+		manager.getSubtask(e3Subtask1.getId());
+		System.out.println(manager.getHistory());
+		manager.deleteSubtask(subtaskId3);
+		System.out.println(manager.getHistory());
+		manager.deleteEpic(epic3Id);
+		System.out.println(manager.getHistory());
+
 		printAllTasks(manager);
 	}
 

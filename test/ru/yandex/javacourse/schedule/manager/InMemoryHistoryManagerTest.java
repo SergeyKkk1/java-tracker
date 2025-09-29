@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InMemoryHistoryManagerTest {
@@ -12,28 +14,59 @@ public class InMemoryHistoryManagerTest {
     HistoryManager historyManager;
 
     @BeforeEach
-    public void initHistoryManager(){
+    public void initHistoryManager() {
         historyManager = Managers.getDefaultHistory();
     }
 
     @Test
-    public void testHistoricVersions(){
-        Task task = new Task("Test 1", "Testiong task 1", TaskStatus.NEW);
-        historyManager.addTask(task);
-        assertEquals(1, historyManager.getHistory().size(), "historic task should be added");
-        task.setStatus(TaskStatus.IN_PROGRESS);
-        historyManager.addTask(task);
-        assertEquals(2, historyManager.getHistory().size(), "historic task should be added");
-    }
-
-    @Test
-    public void testHistoricVersionsByPointer(){
-        Task task = new Task("Test 1", "Testiong task 1", TaskStatus.NEW);
+    public void testHistoricVersionsByPointer() {
+        Task task = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW);
         historyManager.addTask(task);
         assertEquals(task.getStatus(), historyManager.getHistory().get(0).getStatus(), "historic task should be stored");
         task.setStatus(TaskStatus.IN_PROGRESS);
         historyManager.addTask(task);
-        assertEquals(TaskStatus.NEW, historyManager.getHistory().get(0).getStatus(), "historic task should not be changed");
+        assertEquals(TaskStatus.IN_PROGRESS, historyManager.getHistory().get(0).getStatus(), "historic task should be updated");
+        assertEquals(1, historyManager.getHistory().size(), "only last historical event should have been added");
     }
 
+    @Test
+    public void testHistoricVersions() {
+        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
+        historyManager.addTask(task);
+        assertEquals(1, historyManager.getHistory().size(), "historic task should be added");
+        task.setStatus(TaskStatus.IN_PROGRESS);
+        historyManager.addTask(task);
+        assertEquals(1, historyManager.getHistory().size(), "historic task should be replaced with last one");
+    }
+
+    @Test
+    public void testHistoricOrder() {
+        List<Task> tasks = prepareTasks();
+
+        tasks.forEach(task -> historyManager.addTask(task));
+
+        List<Integer> historicalTaskIds = historyManager.getHistory().stream().map(Task::getId).toList();
+        assertEquals(List.of(2, 1, 3), historicalTaskIds);
+    }
+
+    @Test
+    public void testTaskRemoval() {
+        List<Task> tasks = prepareTasks();
+
+        tasks.forEach(task -> historyManager.addTask(task));
+        historyManager.remove(1);
+        historyManager.remove(3);
+
+        List<Integer> historicalTaskIds = historyManager.getHistory().stream().map(Task::getId).toList();
+        assertEquals(List.of(2), historicalTaskIds);
+    }
+
+    private List<Task> prepareTasks() {
+        return List.of(
+                new Task(1, "T1", "D1", TaskStatus.NEW),
+                new Task(2, "T1", "D1", TaskStatus.DONE),
+                new Task(1, "T1", "D1", TaskStatus.IN_PROGRESS),
+                new Task(3, "T3", "D3", TaskStatus.NEW)
+        );
+    }
 }

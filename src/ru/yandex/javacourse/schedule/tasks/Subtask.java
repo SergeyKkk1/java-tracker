@@ -5,12 +5,20 @@ public class Subtask extends Task {
 
 	public Subtask(int id, String name, String description, TaskStatus status, int epicId) {
 		super(id, name, description, status);
-		this.epicId = epicId;
+		setEpicId(epicId, id);
 	}
 
 	public Subtask(String name, String description, TaskStatus status, int epicId) {
 		super(name, description, status);
-		this.epicId = epicId;
+		setEpicId(epicId, id);
+	}
+
+	private void setEpicId(int epicId, int id) {
+		if (epicId != id) {
+			this.epicId = epicId;
+		} else {
+			System.out.println("WARN subtask cannot be attached to itself");
+		}
 	}
 
 	public int getEpicId() {

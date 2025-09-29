@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EpicTest {
-
     @Test
     public void testEqualityById() {
         Epic e0 = new Epic(1, "Test 1", "Testing task 1");
