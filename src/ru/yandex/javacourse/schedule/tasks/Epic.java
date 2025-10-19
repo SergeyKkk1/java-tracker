@@ -1,12 +1,14 @@
 package ru.yandex.javacourse.schedule.tasks;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Epic extends Task {
-	protected ArrayList<Integer> subtaskIds = new ArrayList<>();
+	protected Set<Integer> subtaskIds = new LinkedHashSet<>();
 
 	public Epic(int id, String name, String description) {
 		super(id, name, description, NEW);
@@ -17,11 +19,17 @@ public class Epic extends Task {
 	}
 
 	public void addSubtaskId(int id) {
-		subtaskIds.add(id);
+		if (this.id == id) {
+			System.out.println("WARN epic should not add itself as subtask");
+		} else if (subtaskIds.contains(id)) {
+			System.out.println("WARN should add distinct subtask ids");
+		} else {
+			subtaskIds.add(id);
+		}
 	}
 
 	public List<Integer> getSubtaskIds() {
-		return subtaskIds;
+		return new ArrayList<>(subtaskIds);
 	}
 
 	public void cleanSubtaskIds() {

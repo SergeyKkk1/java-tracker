@@ -1,17 +1,14 @@
 package ru.yandex.javacourse.schedule.manager;
 
-import static ru.yandex.javacourse.schedule.tasks.TaskStatus.IN_PROGRESS;
-import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
+
+import java.util.*;
+
+import static ru.yandex.javacourse.schedule.tasks.TaskStatus.IN_PROGRESS;
+import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -139,19 +136,23 @@ public class InMemoryTaskManager implements TaskManager {
 	@Override
 	public void deleteTask(int id) {
 		tasks.remove(id);
+		historyManager.remove(id);
 	}
 
 	@Override
 	public void deleteEpic(int id) {
 		final Epic epic = epics.remove(id);
+		historyManager.remove(id);
 		for (Integer subtaskId : epic.getSubtaskIds()) {
 			subtasks.remove(subtaskId);
+			historyManager.remove(subtaskId);
 		}
 	}
 
 	@Override
 	public void deleteSubtask(int id) {
 		Subtask subtask = subtasks.remove(id);
+		historyManager.remove(id);
 		if (subtask == null) {
 			return;
 		}
@@ -163,11 +164,14 @@ public class InMemoryTaskManager implements TaskManager {
 	@Override
 	public void deleteTasks() {
 		tasks.clear();
+		historyManager.removeAll();
 	}
 
 	@Override
 	public void deleteSubtasks() {
 		for (Epic epic : epics.values()) {
+			Set<Integer> subtaskIds = new HashSet<>(epic.getSubtaskIds());
+			historyManager.removeAll(subtaskIds);
 			epic.cleanSubtaskIds();
 			updateEpicStatus(epic.getId());
 		}
@@ -176,6 +180,8 @@ public class InMemoryTaskManager implements TaskManager {
 
 	@Override
 	public void deleteEpics() {
+		historyManager.removeAll(epics.keySet());
+		historyManager.removeAll(subtasks.keySet());
 		epics.clear();
 		subtasks.clear();
 	}
