@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
+import ru.yandex.javacourse.schedule.tasks.TaskType;
 
 import java.util.List;
 
@@ -22,18 +23,18 @@ public class InMemoryHistoryManagerTest {
 
     @Test
     public void testHistoricVersionsByPointer() {
-        Task task = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW);
+        Task task = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
         historyManager.addTask(task);
-        assertEquals(task.getStatus(), historyManager.getHistory().get(0).getStatus(), "historic task should be stored");
+        assertEquals(task.getStatus(), historyManager.getHistory().getFirst().getStatus(), "historic task should be stored");
         task.setStatus(TaskStatus.IN_PROGRESS);
         historyManager.addTask(task);
-        assertEquals(TaskStatus.IN_PROGRESS, historyManager.getHistory().get(0).getStatus(), "historic task should be updated");
+        assertEquals(TaskStatus.IN_PROGRESS, historyManager.getHistory().getFirst().getStatus(), "historic task should be updated");
         assertEquals(1, historyManager.getHistory().size(), "only last historical event should have been added");
     }
 
     @Test
     public void testHistoricVersions() {
-        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
+        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
         historyManager.addTask(task);
         assertEquals(1, historyManager.getHistory().size(), "historic task should be added");
         task.setStatus(TaskStatus.IN_PROGRESS);
@@ -77,10 +78,10 @@ public class InMemoryHistoryManagerTest {
 
     private List<Task> prepareTasks() {
         return List.of(
-                new Task(1, "T1", "D1", TaskStatus.NEW),
-                new Task(2, "T1", "D1", TaskStatus.DONE),
-                new Task(1, "T1", "D1", TaskStatus.IN_PROGRESS),
-                new Task(3, "T3", "D3", TaskStatus.NEW)
+                new Task(1, "T1", "D1", TaskStatus.NEW, TaskType.TASK),
+                new Task(2, "T1", "D1", TaskStatus.DONE, TaskType.TASK),
+                new Task(1, "T1", "D1", TaskStatus.IN_PROGRESS, TaskType.TASK),
+                new Task(3, "T3", "D3", TaskStatus.NEW, TaskType.TASK)
         );
     }
 }

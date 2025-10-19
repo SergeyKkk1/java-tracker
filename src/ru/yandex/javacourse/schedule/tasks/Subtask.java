@@ -4,12 +4,12 @@ public class Subtask extends Task {
 	protected int epicId;
 
 	public Subtask(int id, String name, String description, TaskStatus status, int epicId) {
-		super(id, name, description, status);
+		super(id, name, description, status, TaskType.SUBTASK);
 		setEpicId(epicId, id);
 	}
 
 	public Subtask(String name, String description, TaskStatus status, int epicId) {
-		super(name, description, status);
+		super(name, description, status, TaskType.SUBTASK);
 		setEpicId(epicId, id);
 	}
 

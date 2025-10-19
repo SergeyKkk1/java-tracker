@@ -1,49 +1,61 @@
 package ru.yandex.javacourse.schedule.manager;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import ru.yandex.javacourse.schedule.tasks.Epic;
-import ru.yandex.javacourse.schedule.tasks.Subtask;
-import ru.yandex.javacourse.schedule.tasks.Task;
-import ru.yandex.javacourse.schedule.tasks.TaskStatus;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import ru.yandex.javacourse.schedule.tasks.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InMemoryTaskManagerTest {
+public class TaskManagersTest {
+    private static final Path TASKS_FILE = Paths.get("tasks.csv");
 
-    TaskManager manager;
-
-    @BeforeEach
-    public void initManager(){
-        manager = Managers.getDefault();
+    @AfterAll
+    public static void cleanUpAll() throws IOException {
+        Files.deleteIfExists(TASKS_FILE);
     }
 
-    @Test
-    public void testAddTask() {
-        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
+    static Stream<TaskManager> managerProvider() {
+        return Stream.of(
+                Managers.getDefault(),
+                Managers.getFileBackedTaskManager()
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("managerProvider")
+    public void testAddTask(TaskManager manager) {
+        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
         manager.addNewTask(task);
         assertEquals(1, manager.getTasks().size(), "task should be added");
-        Task addedTask = manager.getTasks().get(0);
+        Task addedTask = manager.getTasks().getFirst();
         assertEquals(task, addedTask, "added task id should be set");
         Task byIdTask = manager.getTask(task.getId());
         assertEquals(task, byIdTask, "added task id should be found");
     }
 
-    @Test
-    public void testAddTaskWithId(){
-        Task task = new Task(42, "Test 1", "Testing task 1", TaskStatus.NEW);
+    @ParameterizedTest
+    @MethodSource("managerProvider")
+    public void testAddTaskWithId(TaskManager manager){
+        Task task = new Task(42, "Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
         manager.addNewTask(task);
         assertEquals(1, manager.getTasks().size(), "task should be added");
-        Task addedTask = manager.getTasks().get(0);
+        Task addedTask = manager.getTasks().getFirst();
         assertEquals(task, addedTask, "predefined task id should be set");
     }
 
-    @Test
-    public void testAddTaskWithAndWithoutId(){
-        Task task0 = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
-        Task task1 = new Task(1, "Test 2", "Testing task 2", TaskStatus.NEW);
+    @ParameterizedTest
+    @MethodSource("managerProvider")
+    public void testAddTaskWithAndWithoutId(TaskManager manager){
+        Task task0 = new Task("Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
+        Task task1 = new Task(1, "Test 2", "Testing task 2", TaskStatus.NEW, TaskType.TASK);
         manager.addNewTask(task0);
         manager.addNewTask(task1);
         assertEquals(2, manager.getTasks().size(), "lost a task with predefined id");
@@ -51,25 +63,28 @@ public class InMemoryTaskManagerTest {
         assertEquals(2, task1.getId(), "task id has to be sequential");
     }
 
-    @Test
-    public void checkTaskNotChangedAfterAddTask() {
+    @ParameterizedTest
+    @MethodSource("managerProvider")
+    public void checkTaskNotChangedAfterAddTask(TaskManager manager) {
         int id = 1;
         String name = "Test 1";
         String description = "Testing task 1";
         TaskStatus status = TaskStatus.NEW;
-        Task task1before = new Task(id, name, description, status);
+        TaskType taskType = TaskType.TASK;
+        Task task1before = new Task(id, name, description, status, taskType);
         manager.addNewTask(task1before);
         Task task1after = manager.getTask(task1before.getId());
-        assertEquals(task1after.getId(), id);
-        assertEquals(task1after.getDescription(), description);
-        assertEquals(task1after.getStatus(), status);
-        assertEquals(task1after.getName(), name);
+        assertEquals(id, task1after.getId());
+        assertEquals(description, task1after.getDescription());
+        assertEquals(status, task1after.getStatus());
+        assertEquals(name, task1after.getName());
     }
 
-    @Test
-    public void checkTaskRemoval() {
-        Task task0 = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
-        Task task1 = new Task(1, "Test 2", "Testing task 2", TaskStatus.NEW);
+    @ParameterizedTest
+    @MethodSource("managerProvider")
+    public void checkTaskRemoval(TaskManager manager) {
+        Task task0 = new Task("Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
+        Task task1 = new Task(1, "Test 2", "Testing task 2", TaskStatus.NEW, TaskType.TASK);
         manager.addNewTask(task0);
         manager.addNewTask(task1);
         manager.getTask(task0.getId());
@@ -84,12 +99,13 @@ public class InMemoryTaskManagerTest {
         assertEquals(List.of(task1.getId()), historyTaskIds);
     }
 
-    @Test
-    public void checkEpicSubtaskRemoval() {
+    @ParameterizedTest
+    @MethodSource("managerProvider")
+    public void checkEpicSubtaskRemoval(TaskManager manager) {
         Epic epic = new Epic("Epic1", "Epic desc");
         int epicId = manager.addNewEpic(epic);
         List<Subtask> epicSubtasks = getEpicSubtasks(epicId);
-        List<Integer> subTaskIds = epicSubtasks.stream().map(epicSubtask -> manager.addNewSubtask(epicSubtask)).toList();
+        List<Integer> subTaskIds = epicSubtasks.stream().map(manager::addNewSubtask).toList();
         manager.getEpic(epicId);
         manager.getSubtask(subTaskIds.get(0));
         manager.getSubtask(subTaskIds.get(1));
@@ -101,12 +117,13 @@ public class InMemoryTaskManagerTest {
         assertTrue(history.contains(epic));
     }
 
-    @Test
-    public void checkEpicRemoval() {
+    @ParameterizedTest
+    @MethodSource("managerProvider")
+    public void checkEpicRemoval(TaskManager manager) {
         Epic epic = new Epic("Epic1", "Epic desc");
         int epicId = manager.addNewEpic(epic);
         List<Subtask> epicSubtasks = getEpicSubtasks(epicId);
-        List<Integer> subTaskIds = epicSubtasks.stream().map(epicSubtask -> manager.addNewSubtask(epicSubtask)).toList();
+        List<Integer> subTaskIds = epicSubtasks.stream().map(manager::addNewSubtask).toList();
         manager.getEpic(epicId);
         manager.getSubtask(subTaskIds.get(0));
         manager.getSubtask(subTaskIds.get(1));

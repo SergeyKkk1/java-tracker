@@ -12,30 +12,30 @@ import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
 
 public class InMemoryTaskManager implements TaskManager {
 
-	private final Map<Integer, Task> tasks = new HashMap<>();
-	private final Map<Integer, Epic> epics = new HashMap<>();
-	private final Map<Integer, Subtask> subtasks = new HashMap<>();
+	protected final Map<Integer, Task> tasks = new HashMap<>();
+	protected final Map<Integer, Epic> epics = new HashMap<>();
+	protected final Map<Integer, Subtask> subtasks = new HashMap<>();
 	private int generatorId = 0;
 	private final HistoryManager historyManager = Managers.getDefaultHistory();
 
 
 	@Override
-	public ArrayList<Task> getTasks() {
+	public List<Task> getTasks() {
 		return new ArrayList<>(this.tasks.values());
 	}
 
 	@Override
-	public ArrayList<Subtask> getSubtasks() {
+	public List<Subtask> getSubtasks() {
 		return new ArrayList<>(subtasks.values());
 	}
 
 	@Override
-	public ArrayList<Epic> getEpics() {
+	public List<Epic> getEpics() {
 		return new ArrayList<>(epics.values());
 	}
 
 	@Override
-	public ArrayList<Subtask> getEpicSubtasks(int epicId) {
+	public List<Subtask> getEpicSubtasks(int epicId) {
 		ArrayList<Subtask> tasks = new ArrayList<>();
 		Epic epic = epics.get(epicId);
 		if (epic == null) {
