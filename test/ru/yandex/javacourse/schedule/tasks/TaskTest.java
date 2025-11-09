@@ -8,8 +8,8 @@ public class TaskTest {
 
     @Test
     public void testEqualityById(){
-        Task t0 = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW);
-        Task t1 = new Task(1, "Test 2", "Testing task 2", TaskStatus.IN_PROGRESS);
+        Task t0 = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
+        Task t1 = new Task(1, "Test 2", "Testing task 2", TaskStatus.IN_PROGRESS, TaskType.TASK);
         assertEquals(t0, t1, "task entities should be compared by id");
     }
 

@@ -11,11 +11,15 @@ public class Epic extends Task {
 	protected Set<Integer> subtaskIds = new LinkedHashSet<>();
 
 	public Epic(int id, String name, String description) {
-		super(id, name, description, NEW);
+		super(id, name, description, NEW, TaskType.EPIC);
 	}
 
 	public Epic(String name, String description) {
-		super(name, description, NEW);
+		super(name, description, NEW, TaskType.EPIC);
+	}
+
+	public Epic(int id, String name, String description, TaskStatus status) {
+		super(id, name, description, status, TaskType.EPIC);
 	}
 
 	public void addSubtaskId(int id) {
