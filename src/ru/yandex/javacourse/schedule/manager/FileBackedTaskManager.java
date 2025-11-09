@@ -166,11 +166,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-    @Override
-    public List<Task> getHistory() {
-        return super.getHistory();
-    }
-
     private Path createTaskStorage(Path path) {
         try {
             if (!Files.exists(path)) {
