@@ -1,14 +1,13 @@
 package ru.yandex.javacourse.schedule.tasks;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 
-import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
+import static ru.yandex.javacourse.schedule.tasks.TaskStatus.*;
 
 public class Epic extends Task {
-	protected Set<Integer> subtaskIds = new LinkedHashSet<>();
+	protected Map<Integer, Task> subtaskIdToSubtask = new LinkedHashMap<>();
 
 	public Epic(int id, String name, String description) {
 		super(id, name, description, NEW, TaskType.EPIC);
@@ -22,26 +21,49 @@ public class Epic extends Task {
 		super(id, name, description, status, TaskType.EPIC);
 	}
 
-	public void addSubtaskId(int id) {
-		if (this.id == id) {
+	public void addSubtask(Task subtask) {
+		if (this.id == subtask.id) {
 			System.out.println("WARN epic should not add itself as subtask");
-		} else if (subtaskIds.contains(id)) {
+		} else if (subtaskIdToSubtask.containsKey(id)) {
 			System.out.println("WARN should add distinct subtask ids");
 		} else {
-			subtaskIds.add(id);
+			subtaskIdToSubtask.put(subtask.getId(), subtask);
 		}
 	}
 
 	public List<Integer> getSubtaskIds() {
-		return new ArrayList<>(subtaskIds);
+		return new ArrayList<>(subtaskIdToSubtask.keySet());
 	}
 
 	public void cleanSubtaskIds() {
-		subtaskIds.clear();
+		subtaskIdToSubtask.clear();
 	}
 
 	public void removeSubtask(int id) {
-		subtaskIds.remove(Integer.valueOf(id));
+		subtaskIdToSubtask.remove(id);
+	}
+
+	@Override
+	public Duration getDuration() {
+		return subtaskIdToSubtask.values().stream()
+				.map(Task::getDuration)
+				.filter(Objects::nonNull)
+				.reduce(Duration::plus)
+				.orElse(null);
+	}
+
+	@Override
+	public LocalDateTime getStartTime() {
+		return subtaskIdToSubtask.values().stream()
+				.filter(task -> task.getStartTime() != null)
+				.min(Comparator.comparing(Task::getStartTime))
+				.map(Task::getStartTime)
+				.orElse(null);
+	}
+
+	@Override
+	public LocalDateTime getEndTime() {
+		return subtaskIdToSubtask.values().stream().min(Comparator.comparing(Task::getEndTime)).get().getEndTime();
 	}
 
 	@Override
@@ -51,7 +73,20 @@ public class Epic extends Task {
 				", name='" + name + '\'' +
 				", status=" + status +
 				", description='" + description + '\'' +
-				", subtaskIds=" + subtaskIds +
+				", subtaskIds=" + subtaskIdToSubtask +
 				'}';
+	}
+
+	@Override
+	public TaskStatus getStatus() {
+		if (subtaskIdToSubtask.isEmpty()) {
+			return NEW;
+		}
+		boolean isAnyInProgress = subtaskIdToSubtask.values().stream().anyMatch(subtask -> subtask.getStatus() == IN_PROGRESS);
+		if (isAnyInProgress) {
+			return IN_PROGRESS;
+		}
+		boolean isAllDone = subtaskIdToSubtask.values().stream().allMatch(subtask -> subtask.getStatus() == DONE);
+		return isAllDone ? DONE : NEW;
 	}
 }

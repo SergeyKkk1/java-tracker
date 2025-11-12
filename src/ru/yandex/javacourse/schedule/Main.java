@@ -7,6 +7,9 @@ import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskType;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import static ru.yandex.javacourse.schedule.tasks.TaskStatus.*;
 
 public class Main {
@@ -15,8 +18,8 @@ public class Main {
 		TaskManager manager = Managers.getDefault();
 
 		// Создание
-		Task task1 = new Task("Task #1", "Task1 description", NEW, TaskType.TASK);
-		Task task2 = new Task("Task #2", "Task2 description", IN_PROGRESS, TaskType.TASK);
+		Task task1 = new Task("Task #1", "Task1 description", NEW, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now());
+		Task task2 = new Task("Task #2", "Task2 description", IN_PROGRESS, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now());
 		final int taskId1 = manager.addNewTask(task1);
 		final int taskId2 = manager.addNewTask(task2);
 

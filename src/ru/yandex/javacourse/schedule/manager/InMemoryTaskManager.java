@@ -1,9 +1,6 @@
 package ru.yandex.javacourse.schedule.manager;
 
-import ru.yandex.javacourse.schedule.tasks.Epic;
-import ru.yandex.javacourse.schedule.tasks.Subtask;
-import ru.yandex.javacourse.schedule.tasks.Task;
-import ru.yandex.javacourse.schedule.tasks.TaskStatus;
+import ru.yandex.javacourse.schedule.tasks.*;
 
 import java.util.*;
 
@@ -15,6 +12,7 @@ public class InMemoryTaskManager implements TaskManager {
 	protected final Map<Integer, Task> tasks = new HashMap<>();
 	protected final Map<Integer, Epic> epics = new HashMap<>();
 	protected final Map<Integer, Subtask> subtasks = new HashMap<>();
+	protected final TreeSet<Task> prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 	private int generatorId = 0;
 	private final HistoryManager historyManager = Managers.getDefaultHistory();
 
@@ -41,9 +39,7 @@ public class InMemoryTaskManager implements TaskManager {
 		if (epic == null) {
 			return null;
 		}
-		for (int id : epic.getSubtaskIds()) {
-			tasks.add(subtasks.get(id));
-		}
+		epic.getSubtaskIds().forEach(subtaskId -> tasks.add(subtasks.get(subtaskId)));
 		return tasks;
 	}
 
@@ -69,35 +65,52 @@ public class InMemoryTaskManager implements TaskManager {
 	}
 
 	@Override
-	public int addNewTask(Task task) {
-		final int id = ++generatorId;
-		task.setId(id);
-		tasks.put(id, task);
-		return id;
+	public Integer addNewTask(Task task) {
+		if (isTaskNotInterceptsWithOther(task)) {
+			final int id = ++generatorId;
+			task.setId(id);
+			tasks.put(id, task);
+			addToPriorityTask(task);
+			return id;
+		}
+		return null;
+	}
+
+	private void addToPriorityTask(Task task) {
+		if (task.getStartTime() != null) {
+			prioritizedTasks.add(task);
+		}
 	}
 
 	@Override
-	public int addNewEpic(Epic epic) {
-		final int id = ++generatorId;
-		epic.setId(id);
-		epics.put(id, epic);
-		return id;
-
+	public Integer addNewEpic(Epic epic) {
+		if (isTaskNotInterceptsWithOther(epic)) {
+			final int id = ++generatorId;
+			epic.setId(id);
+			epics.put(id, epic);
+			addToPriorityTask(epic);
+			return id;
+		}
+		return null;
 	}
 
 	@Override
 	public Integer addNewSubtask(Subtask subtask) {
-		final int epicId = subtask.getEpicId();
-		Epic epic = epics.get(epicId);
-		if (epic == null) {
-			return null;
+		if (isTaskNotInterceptsWithOther(subtask)) {
+			final int epicId = subtask.getEpicId();
+			Epic epic = epics.get(epicId);
+			if (epic == null) {
+				return null;
+			}
+			final int id = ++generatorId;
+			subtask.setId(id);
+			subtasks.put(id, subtask);
+			addToPriorityTask(subtask);
+			epic.addSubtask(subtask);
+			updateEpicStatus(epicId);
+			return id;
 		}
-		final int id = ++generatorId;
-		subtask.setId(id);
-		subtasks.put(id, subtask);
-		epic.addSubtaskId(subtask.getId());
-		updateEpicStatus(epicId);
-		return id;
+		return null;
 	}
 
 	@Override
@@ -191,6 +204,11 @@ public class InMemoryTaskManager implements TaskManager {
 		return historyManager.getHistory();
 	}
 
+	@Override
+	public List<Task> getPrioritizedTasks() {
+		return new ArrayList<>(prioritizedTasks);
+	}
+
 	private void updateEpicStatus(int epicId) {
 		Epic epic = epics.get(epicId);
 		List<Integer> subs = epic.getSubtaskIds();
@@ -214,5 +232,17 @@ public class InMemoryTaskManager implements TaskManager {
 			return;
 		}
 		epic.setStatus(status);
+	}
+
+	private boolean isTaskNotInterceptsWithOther(Task checkedTask) {
+		if (checkedTask.getStartTime() != null && checkedTask.getDuration() != null) {
+			return prioritizedTasks.stream()
+					.filter(task -> task.getType() != TaskType.EPIC)
+					.noneMatch(task -> (checkedTask.getStartTime().isBefore(task.getEndTime()) && checkedTask.getStartTime().isAfter(task.getStartTime()))
+					|| (checkedTask.getEndTime().isBefore(task.getEndTime()) && checkedTask.getEndTime().isAfter(task.getStartTime()))
+					|| (checkedTask.getStartTime().isBefore(task.getStartTime()) && checkedTask.getEndTime().isAfter(task.getEndTime())));
+		} else {
+			return true;
+		}
 	}
 }

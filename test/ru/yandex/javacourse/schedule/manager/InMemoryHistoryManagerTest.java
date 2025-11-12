@@ -8,22 +8,27 @@ import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
 import ru.yandex.javacourse.schedule.tasks.TaskType;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class InMemoryHistoryManagerTest {
+public class InMemoryHistoryManagerTest extends TaskManagersTest<InMemoryTaskManager> {
 
     HistoryManager historyManager;
 
     @BeforeEach
     public void initHistoryManager() {
+        manager = new InMemoryTaskManager();
         historyManager = Managers.getDefaultHistory();
     }
 
     @Test
     public void testHistoricVersionsByPointer() {
-        Task task = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
+        Task task = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now());
+        assertTrue(historyManager.getHistory().isEmpty(), "History should be empty");
         historyManager.addTask(task);
         assertEquals(task.getStatus(), historyManager.getHistory().getFirst().getStatus(), "historic task should be stored");
         task.setStatus(TaskStatus.IN_PROGRESS);
@@ -34,7 +39,7 @@ public class InMemoryHistoryManagerTest {
 
     @Test
     public void testHistoricVersions() {
-        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK);
+        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now());
         historyManager.addTask(task);
         assertEquals(1, historyManager.getHistory().size(), "historic task should be added");
         task.setStatus(TaskStatus.IN_PROGRESS);
@@ -78,10 +83,10 @@ public class InMemoryHistoryManagerTest {
 
     private List<Task> prepareTasks() {
         return List.of(
-                new Task(1, "T1", "D1", TaskStatus.NEW, TaskType.TASK),
-                new Task(2, "T1", "D1", TaskStatus.DONE, TaskType.TASK),
-                new Task(1, "T1", "D1", TaskStatus.IN_PROGRESS, TaskType.TASK),
-                new Task(3, "T3", "D3", TaskStatus.NEW, TaskType.TASK)
+                new Task(1, "T1", "D1", TaskStatus.NEW, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now().minusDays(1)),
+                new Task(2, "T1", "D1", TaskStatus.DONE, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now().minusDays(2)),
+                new Task(1, "T1", "D1", TaskStatus.IN_PROGRESS, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now().minusDays(3)),
+                new Task(3, "T3", "D3", TaskStatus.NEW, TaskType.TASK, Duration.ofMinutes(20), LocalDateTime.now().minusDays(4))
         );
     }
 }

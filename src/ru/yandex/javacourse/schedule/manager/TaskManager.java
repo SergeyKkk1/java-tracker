@@ -26,9 +26,9 @@ public interface TaskManager {
 
 	Epic getEpic(int id);
 
-	int addNewTask(Task task);
+	Integer addNewTask(Task task);
 
-	int addNewEpic(Epic epic);
+	Integer addNewEpic(Epic epic);
 
 	Integer addNewSubtask(Subtask subtask);
 
@@ -51,4 +51,6 @@ public interface TaskManager {
 	void deleteEpics();
 
 	List<Task> getHistory();
+
+	List<Task> getPrioritizedTasks();
 }
