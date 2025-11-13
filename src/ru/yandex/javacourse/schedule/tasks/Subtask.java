@@ -1,10 +1,18 @@
 package ru.yandex.javacourse.schedule.tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Subtask extends Task {
 	protected int epicId;
 
-	public Subtask(int id, String name, String description, TaskStatus status, int epicId) {
-		super(id, name, description, status, TaskType.SUBTASK);
+	public Subtask(int id, String name, String description, TaskStatus status, int epicId, Duration duration, LocalDateTime startTime) {
+		super(id, name, description, status, TaskType.SUBTASK, duration, startTime);
+		setEpicId(epicId, id);
+	}
+
+	public Subtask(String name, String description, TaskStatus status, int epicId, Duration duration, LocalDateTime startTime) {
+		super(name, description, status, TaskType.SUBTASK, duration, startTime);
 		setEpicId(epicId, id);
 	}
 

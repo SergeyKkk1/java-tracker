@@ -1,5 +1,7 @@
 package ru.yandex.javacourse.schedule.tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -8,6 +10,18 @@ public class Task {
 	protected TaskStatus status;
 	protected String description;
 	protected TaskType type;
+	protected Duration duration;
+	protected LocalDateTime startTime;
+
+	public Task(int id, String name, String description, TaskStatus status, TaskType type, Duration duration, LocalDateTime startTime) {
+		this.id = id;
+		this.name = name;
+		this.description = description;
+		this.status = status;
+		this.type = type;
+		this.duration = duration;
+		this.startTime = startTime;
+	}
 
 	public Task(int id, String name, String description, TaskStatus status, TaskType type) {
 		this.id = id;
@@ -15,6 +29,15 @@ public class Task {
 		this.description = description;
 		this.status = status;
 		this.type = type;
+	}
+
+	public Task(String name, String description, TaskStatus status, TaskType type, Duration duration, LocalDateTime startTime) {
+		this.name = name;
+		this.description = description;
+		this.status = status;
+		this.type = type;
+		this.duration = duration;
+		this.startTime = startTime;
 	}
 
 	public Task(String name, String description, TaskStatus status, TaskType type) {
@@ -62,6 +85,26 @@ public class Task {
 
 	public void setType(TaskType type) {
 		this.type = type;
+	}
+
+	public Duration getDuration() {
+		return duration;
+	}
+
+	public void setDuration(Duration duration) {
+		this.duration = duration;
+	}
+
+	public LocalDateTime getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(LocalDateTime startTime) {
+		this.startTime = startTime;
+	}
+
+	public LocalDateTime getEndTime() {
+		return startTime.plus(duration);
 	}
 
 	@Override
