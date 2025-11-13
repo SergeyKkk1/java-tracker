@@ -106,9 +106,12 @@ public abstract class TaskManagersTest<T extends TaskManager> {
 
         List<Integer> historyTaskIds = manager.getHistory().stream().map(Task::getId).toList();
         List<Task> remainingTasks = manager.getTasks();
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
         assertEquals(1, remainingTasks.size(), "remaining task should also be removed");
         assertEquals(1, historyTaskIds.size(), "task should also be removed from history");
+        assertEquals(1, prioritizedTasks.size(), "task should also be removed from prioritized tasks");
         assertEquals(List.of(task1.getId()), historyTaskIds);
+        assertEquals(List.of(task1.getId()), List.of(prioritizedTasks.getFirst().getId()));
     }
 
     @Test
@@ -124,8 +127,11 @@ public abstract class TaskManagersTest<T extends TaskManager> {
         manager.deleteSubtask(subTaskIds.get(0));
 
         List<Task> history = manager.getHistory();
+        List<Task> prioritizedTasks = manager.getPrioritizedTasks();
+        assertEquals(3, prioritizedTasks.size(), "Must also remove subtask from prioritized tasks");
         assertFalse(history.contains(epicSubtasks.getFirst()));
         assertTrue(history.contains(epic));
+        assertEquals("SubT4", prioritizedTasks.getFirst().getName());
     }
 
     @Test
@@ -175,10 +181,10 @@ public abstract class TaskManagersTest<T extends TaskManager> {
 
     private List<Subtask> getEpicSubtasks(int epicId) {
         return List.of(
-                new Subtask("SubT1", "Desc1", TaskStatus.NEW, epicId),
-                new Subtask("SubT2", "Desc2", TaskStatus.NEW, epicId),
-                new Subtask("SubT3", "Desc3", TaskStatus.NEW, epicId),
-                new Subtask("SubT4", "Desc4", TaskStatus.NEW, epicId)
+                new Subtask("SubT1", "Desc1", TaskStatus.NEW, epicId, Duration.ofMinutes(30), LocalDateTime.now().minusDays(1)),
+                new Subtask("SubT2", "Desc2", TaskStatus.NEW, epicId, Duration.ofMinutes(30), LocalDateTime.now().minusDays(2)),
+                new Subtask("SubT3", "Desc3", TaskStatus.NEW, epicId, Duration.ofMinutes(30), LocalDateTime.now().minusDays(3)),
+                new Subtask("SubT4", "Desc4", TaskStatus.NEW, epicId, Duration.ofMinutes(30), LocalDateTime.now().minusDays(4))
         );
     }
 }

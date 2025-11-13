@@ -3,9 +3,11 @@ package ru.yandex.javacourse.schedule.manager;
 import ru.yandex.javacourse.schedule.tasks.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ru.yandex.javacourse.schedule.tasks.TaskStatus.IN_PROGRESS;
 import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
+import static ru.yandex.javacourse.schedule.tasks.TaskType.*;
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -88,7 +90,6 @@ public class InMemoryTaskManager implements TaskManager {
 			final int id = ++generatorId;
 			epic.setId(id);
 			epics.put(id, epic);
-			addToPriorityTask(epic);
 			return id;
 		}
 		return null;
@@ -148,7 +149,8 @@ public class InMemoryTaskManager implements TaskManager {
 
 	@Override
 	public void deleteTask(int id) {
-		tasks.remove(id);
+		Task task = tasks.remove(id);
+		prioritizedTasks.remove(task);
 		historyManager.remove(id);
 	}
 
@@ -157,7 +159,8 @@ public class InMemoryTaskManager implements TaskManager {
 		final Epic epic = epics.remove(id);
 		historyManager.remove(id);
 		for (Integer subtaskId : epic.getSubtaskIds()) {
-			subtasks.remove(subtaskId);
+			Subtask subtask = subtasks.remove(subtaskId);
+			prioritizedTasks.remove(subtask);
 			historyManager.remove(subtaskId);
 		}
 	}
@@ -165,6 +168,7 @@ public class InMemoryTaskManager implements TaskManager {
 	@Override
 	public void deleteSubtask(int id) {
 		Subtask subtask = subtasks.remove(id);
+		prioritizedTasks.remove(subtask);
 		historyManager.remove(id);
 		if (subtask == null) {
 			return;
@@ -178,6 +182,10 @@ public class InMemoryTaskManager implements TaskManager {
 	public void deleteTasks() {
 		tasks.clear();
 		historyManager.removeAll();
+		Set<Task> tasksToRemove = prioritizedTasks.stream()
+				.filter(task -> task.getType() == TASK)
+				.collect(Collectors.toSet());
+		prioritizedTasks.removeAll(tasksToRemove);
 	}
 
 	@Override
@@ -189,6 +197,10 @@ public class InMemoryTaskManager implements TaskManager {
 			updateEpicStatus(epic.getId());
 		}
 		subtasks.clear();
+		Set<Task> subtasksToRemove = prioritizedTasks.stream()
+				.filter(task -> task.getType() == SUBTASK)
+				.collect(Collectors.toSet());
+		prioritizedTasks.removeAll(subtasksToRemove);
 	}
 
 	@Override
@@ -197,6 +209,10 @@ public class InMemoryTaskManager implements TaskManager {
 		historyManager.removeAll(subtasks.keySet());
 		epics.clear();
 		subtasks.clear();
+		Set<Task> subtasksToRemove = prioritizedTasks.stream()
+				.filter(task -> task.getType() == SUBTASK)
+				.collect(Collectors.toSet());
+		prioritizedTasks.removeAll(subtasksToRemove);
 	}
 
 	@Override
